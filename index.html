@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FUN Owner Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#071026;
+      --card:#0f1724;
+      --muted:#98a9c7;
+      --accent:#6ee7b7;
+    }
+    body {
+      background:var(--bg);
+      color:#e7f0fb;
+      font-family:system-ui;
+      padding:18px;
+    }
+    .card {
+      max-width:800px;
+      margin:18px auto;
+      background:var(--card);
+      border:1px solid rgba(255,255,255,0.05);
+      padding:18px;
+      border-radius:10px;
+    }
+    .field{margin-bottom:10px}
+    label{font-size:0.9rem;color:var(--muted)}
+    .footer{text-align:center;margin-top:14px;color:var(--muted);font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="card shadow-sm">
+    <h4 style="color:var(--accent)">FUN Owner Admin Panel</h4>
+    <p style="color:var(--muted)">CONTROL PANEL <code></code></p>
+
+    <div class="row">
+      <div class="col-md-4 field">
+        <label>GAME CONTROL</label>
+        <select id="game" class="form-select">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 field">
+        <label>NUMBER HACK ACTIVE</label>
+        <select id="paisa" class="form-select">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 field">
+        <label>DEPOSIT AMOUT</label>
+        <input id="depositamount" class="form-control" placeholder="e.g. 1000">
+      </div>
+
+      <div class="col-md-6 field">
+        <label>DEPOSIT HACK NAME</label>
+        <input id="titlename1" class="form-control">
+      </div>
+
+      <div class="col-md-6 field">
+        <label>HACK NAME</label>
+        <input id="titlename" class="form-control">
+      </div>
+
+      <div class="col-md-6 field">
+        <label>TELEGRAM LINK</label>
+        <input id="link" class="form-control" placeholder="https://...">
+      </div>
+
+      <div class="col-md-6 field">
+        <label>REGISTER LINK</label>
+        <input id="web" class="form-control">
+      </div>
+
+      <div class="col-md-4 field">
+        <label>APP UPDATE</label>
+        <select id="update" class="form-select">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 field">
+        <label>MAIMTENANCE</label>
+        <select id="maintenance" class="form-select">
+          <option value="false">false</option>
+          <option value="true">true</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 field">
+        <label>JOIN BUTTON</label>
+        <input id="iosd" class="form-control" placeholder="Button Label">
+      </div>
+
+      <div class="col-md-6 field">
+        <label>MAIMTENANCE TITLE</label>
+        <input id="titleios" class="form-control">
+      </div>
+
+      <div class="col-md-6 field">
+        <label>MAIMTENANCE MESSAGE</label>
+        <input id="messageios" class="form-control">
+      </div>
+
+      <div class="col-md-12 field">
+        <label>MAIMTENANCE TELEGRAM LINK</label>
+        <input id="tglink" class="form-control" placeholder="https://...">
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <button id="loadBtn" class="btn btn-outline-light btn-sm">Load</button>
+      <button id="saveBtn" class="btn btn-success btn-sm">Save</button>
+      <button id="writePaisa" class="btn btn-secondary btn-sm">Write paisa</button>
+      <button id="resetBtn" class="btn btn-danger btn-sm">Reset</button>
+      <span id="status" style="margin-left:12px;color:var(--muted)"></span>
+    </div>
+
+    <div style="margin-top:14px;color:var(--muted);font-size:0.9rem">
+      <b>Realtime Preview:</b>
+      <div style="margin-top:4px">
+        game: <span id="pv_game">—</span> &nbsp;|
+        paisa: <span id="pv_paisa">—</span> &nbsp;|
+        deposit: <span id="pv_deposit">—</span>
+      </div>
+    </div>
+
+    <div class="footer">MADE BY @FUN_786</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcBnCTIUwmbUIUqnwSElD4Amyv786rFiE",
+      authDomain: "ldcallmepapa.firebaseapp.com",
+      databaseURL: "https://ldcallmepapa-default-rtdb.firebaseio.com",
+      projectId: "ldcallmepapa",
+      storageBucket: "ldcallmepapa.appspot.com",
+      messagingSenderId: "815621044123",
+      appId: "1:815621044123:android:ea297125ec8f4dde89133e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const $ = id => document.getElementById(id);
+    const setStatus = (s,err=false)=>{ $('status').textContent=s; $('status').style.color=err?'crimson':'var(--muted)' }
+
+    function loadAll(){
+      setStatus('Loading...');
+      db.ref('data/data').once('value').then(snap=>{
+        const v=snap.val()||{};
+        ['game','paisa','update','maintenance'].forEach(f=>$(f).value=v[f]||'false');
+        ['link','web','titleios','messageios','iosd','tglink','titlename1','titlename','depositamount'].forEach(f=>$(f).value=v[f]||'');
+        $('pv_game').textContent=v.game||'—';
+        $('pv_paisa').textContent=v.paisa||'—';
+        $('pv_deposit').textContent=v.depositamount||'—';
+        setStatus('Loaded ✅');
+      }).catch(e=>setStatus(e.message,true));
+    }
+
+    $('loadBtn').onclick=loadAll;
+
+    $('saveBtn').onclick=()=>{
+      const d={
+        game: $('game').value,
+        paisa: $('paisa').value,
+        link: $('link').value.trim(),
+        web: $('web').value.trim(),
+        update: $('update').value,
+        maintenance: $('maintenance').value,
+        titleios: $('titleios').value.trim(),
+        messageios: $('messageios').value.trim(),
+        iosd: $('iosd').value.trim(),
+        tglink: $('tglink').value.trim(),
+        titlename1: $('titlename1').value.trim(),
+        titlename: $('titlename').value.trim(),
+        depositamount: $('depositamount').value.trim()
+      };
+      setStatus('Saving...');
+      db.ref('data/data').set(d).then(()=>{setStatus('Saved ✅');loadAll();})
+      .catch(e=>setStatus(e.message,true));
+    }
+
+    $('writePaisa').onclick=()=>{
+      const v=$('paisa').value;
+      setStatus('Writing paisa...');
+      db.ref('data/data/paisa').set(v).then(()=>setStatus('paisa updated ✅')).catch(e=>setStatus(e.message,true));
+    }
+
+    $('resetBtn').onclick=()=>{
+      ['game','paisa','update','maintenance'].forEach(f=>$(f).value='false');
+      ['link','web','titleios','messageios','iosd','tglink','titlename1','titlename','depositamount'].forEach(f=>$(f).value='');
+      setStatus('Form reset (not saved)');
+    }
+
+    db.ref('data/data').on('value',snap=>{
+      const v=snap.val()||{};
+      $('pv_game').textContent=v.game||'—';
+      $('pv_paisa').textContent=v.paisa||'—';
+      $('pv_deposit').textContent=v.depositamount||'—';
+    });
+
+    loadAll();
+  </script>
+</body>
+  </html>
